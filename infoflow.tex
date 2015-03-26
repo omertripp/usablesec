@@ -42,126 +42,11 @@ $(2,9) \longrightarrow (9,11)$ (confidentiality vulnerability).
 
 \subsection{The Principle of Noninterference}
 
-An elegant way of formalizing the requirement that the source data does not affect the sink's behavior is via the principle of noninterference. This principle --- first proposed by Goguen and Meseguer in 1982 \cite{GoguenMeseguer} --- formalizes the intuition that variation ``sensitive'' values should not cause variation of ``nonsensitive'' values.
 
-Noninterference assumes an abstract model of the program as an input/output machine. Inputs and outputs are classified as either \emph{high} or \emph{low}.
-%
-In confidentiality, low is interpreted as low sensitivity. A low value is thus a value that is considered unclassified. Complementarily, a high value is considered classified (or sensitive). Integrity assigns the dual meaning to high and low. 
-In integrity, low means trusted, whereas high means untrusted. Thanks to these dual interpretations, both integrity and confidentiality reduce to the requirement that there be no flow of high input values to the low part of the output.
-%
-These dual interpretations of high and low are summarized in Table \ref{Ta:highlow}.
-
-\begin{table}
-	\begin{center}
-		\begin{tabular}{|c|c|c|}
-			\hline
-					& {\bf Integrity} & {\bf Confidentiality} \\ \hline
-			{\bf High}	& Untrusted & Secret \\ \hline
-			{\bf Low} & Trusted & Public \\ 		
-			\hline
-		\end{tabular}
-	\end{center}
-		\caption{\label{Ta:highlow}The meaning of high and low values with the addition of downgrading}
-\end{table} 
-
-With this background, we can give an informal statement of the property of noninterference. The property holds if and only if the restriction of the output to low values is the same for any pair of inputs that agree on the low values. That is, modifying the high values does not lead to any observable change in the system's output. In this sense, there is no interference between high and low values.
-
-Formal statement of the noninterference principle requires some notation. Denote by $M$ a memory configuration, and let $M_L$ and $M_H$ denote the projection of $M$ to its low and high parts, respectively. We specialize the equality relation analogously: $M \equiv_{L} M'$ means equality over the low values between memory configurations $M$ and $M'$, and similarly, $M \equiv_{H} M'$ means equality over the high parts. Finally, let $P$ be the program, which we assume for simplicity to be deterministic, and $(P,M) \longrightarrow^{*} M'$ a complete execution of $P$ starting at memory configuration $M$ and terminating at configuration $M'$.
-
-The definition of noninterference is then as follows:
-$$
-	\begin{array}{rrrcl}
-	\forall M_1,M_2. &  				  & M_1 & \equiv_L & M_2 \\
-							   &  \wedge & (P,M_1) & \longrightarrow^{*} & M_1' \\ 
-							   &  \wedge & (P,M_2) & \longrightarrow^{*} & M_2' \\
-						   & \Longrightarrow & M_1'    & \equiv_L & M_2'  \\
-	\end{array}
-$$
-That is, if the initial memory configurations agree on their respective low parts, then the same should hold true of the final memory configurations. A visual representation of this requirements is provided in Figure \ref{noninterfere}. 
-
-\begin{figure}
-	TODO!!!
-	\caption{Visual representation of the noninterference principle}
-\end{figure}
-
-Let us now revisit the example in Figure \ref{Fi:chIFS:example}. First, for the integrity vulnerability extending between {\tt getParameter} and {\tt renderToHTML}, we observe that 
-the user-provided data --- belonging in the high part of the input configuration --- flows into a security-sensitive operation, and so the low part of the output configuration. Analogously, the confidential --- and thus high --- data read via the {\tt readPassword} call is released to public observers of the log, thus flowing into the low part of the output configuration.
 
 \subsection{The Problem: Enforcement of Noninterference}
 
-While noninterference is an elegant criterion that accounts simultaneously for both integrity and confidentiality threats, it suffers from several limitations and poses some nontrivial implementation challenges. We discuss these in turn.
 
-\subsubsection{Strictness}
-
-A straightforward fix for the defects exhibited by the code in Figure \ref{Fi:chIFS:example} is to downgrade the high value: Sanitize or validate it to prevent integrity attacks, or declassify it to prevent release of sensitive information. Notice, however, that the noninterference property --- in its current form --- is too strict to accomodate the notion of downgrading.
-
-Indeed, in the practical setting of production sofrware, 
-whose behavior is often guided by user input and whose output often reflects data originating from multiple users, it is extremely challenging to enforce full separation between high and low values. Doing so often comes at the cost of critical functionality.
-
-As a natural example, an e-commerce site accepts login credentials from the user, which it utilizes to access the user's account, stored on a backend database, via security-sensitive calls that could potentiall lead to an SQL injection attack. For confidentiality, public data presented to the user, such as purchase recommendations, may be influenced by sensitive data such as the user's profile.
-
-In response, a relaxed notion of noninterference has been proposed by XYZ, which augments the basic setting with the ability to transform high values into low values via downgrading. This enhancement permits the programmer to handle security-sensitive values as they propagate through the code. With this enhancement, we arrive from Table \ref{Ta:highlow} to Table \ref{Ta:highlowExtended}.
-
-\begin{table}
-	\begin{center}
-		\begin{tabular}{|c|c|c|}
-			\hline
-			& {\bf Integrity} & {\bf Confidentiality} \\ \hline
-			{\bf High}	& Untrusted & Secret \\ \hline
-			{\bf Low} & Trusted & Public \\ \hline		
-			{\bf Downgrading} & Endorsement & Declassification \\
-			\hline
-		\end{tabular}
-	\end{center}
-	\caption{\label{Ta:highlowExtended}The meaning of high and low values with the addition of downgrading}
-\end{table} 
-
-\subsubsection{Correctness of Downgrading}
-
-The introduction of downgraders as a means to accommodate information flows that transition from high to low is necessary for practical adoption of the noninterference criterion. At the same time, however, it introduces a new challenge: How do we ascertain that the downgrading operation operates correctly?
-
-If the downgrader is incorrect, or partial, then an attacker may still be able to exploit the system. We provide an example in Figure \ref{TateExample}. This code, taken from ...
-
-
-
-\subsubsection{Covert Channels}
-
-So far we have implicitly considered only direct flow of information. However, security threats occupy a broader scope. In particular, an attack could become possible via indirect mechanisms, such as exploiting time or heat measurements.
-
-In general, we refer to mechanisms for information transfer as \emph{channels}. A \emph{channel} is a means, or mechanism, to signal information through a compute device. 
-\emph{Covert channels}, or \emph{side channels}, are channels that exploit a mechanism whose primary purpose is not information transfer.
-
-Covert channels divide into several categories, which we survey in turn.
-
-\paragraph{Implicit flows.} The control-flow behavior of a program is a means to signal information. Branching decisions governed by high values may impact low variables, which creates a covert channel.
-
-\begin{figure}
-	\begin{lstlisting}
-t = h % 2;
-l = 0;
-if (t == 1) 
-  l = 1;
-	\end{lstlisting}
-\caption{\label{Fi:implicitFlow}Example of an implicit flow}
-\end{figure}
-
-To illustrate this, we refer to the code in Figure \ref{Fi:implicitFlow}. In this program, we assume that {\tt l} and {\tt h} are low and high variables, respectively. Though there is no explicit assignment of the high value pointed-to by {\tt h} to {\tt l}, this program is equivalent to the program
-\begin{quote}
-	{\tt l = h \% 2}
-\end{quote} 
-where there is direct flow from high to low.
-
-\paragraph{Termination.} Another channel, similar to implicit flows, is termination. Whether or not a program terminates is a potential channel for release of sensitive information. *** Example ***
-
-\paragraph{Timing.} Monitoring the execution time of a program discloses information about the values it operates on. In a seminal paper \cite{XXX},
-
-\paragraph{Probabilistic.} Under the assumption that the attacker is able to execute the program multiple times, sensitive information is potentially leaked through stochastic program properties by changing the distribution of observable data. 
-
-\paragraph{Resource exhaustion.} Another channel is exhaustion of finite compute resources, such as memory or disk space. 
-
-\paragraph{Power.} Similarly to time measurement, the power consumed by the compute device throughout the program's execution is a potential hint as to which values are being processed.
-
-\paragraph{Sensors.} Correlations between sensors can disclose to an attacker unintended information. A recent example is use of the gyroscope built into modern smartphones to recover the speaker's identity, and even parse speech.
 
 \section{Language-based Information-flow Security}
 
@@ -174,42 +59,4 @@ A security type system, therefore, is a set of security rules, which specify the
 \noindent {\bf TODO:} Add discussion of rules...
 
 A major advantage of the language-based approach lies in its ability to account for implicit flows. This is done by assigning a label also to the program counter. Returning to the example in Figure \ref{Fi:implicitFlow}, we assign a high label to the conditional statement, which tests a high value, and consequently also to all the program counters dominated by the condition, namely the assignment to {\tt l}. This makes the implicit flow explicit. 
-
-
-\section{Information-flow Security via Program Analysis}
-
-An alternative approach to annotating the program with security types is to track flow of information throughout the code via program analysis. In this scheme, there are three categories of statements that are distinguished from the rest, as mentioned briefly above:
-\begin{itemize}
-	\item \emph{Source} statements are statements that read either untrusted data (integrity) or sensitive data (confidentiality).
-	\item \emph{Sink} statements either perform a security-sensitive operation (integrity), or release information to untrusted observers (confidentiality).
-	\item Finally, \emph{downgrader} statements either sanitize/validate untrusted data (integrity), or anonymize/declassify sensitive data (confidentiality).
-\end{itemize}
-
-These three categories of statements are organized into security rules of the form $\left( Src,Dwn,Snk \right)$. $Src$, $Dwn$ and $Snk$ denote subsets of the source, sink and downgrader statements in the program, repsectively. Rules restrict the relevant security threats. Flow of information between source $src$ and sink $snk$ constitutes a security threat only if there is a rule $r$, such that $src \in r.Src$ and $snk \in r.Snk$. By the same token, the flow is benign only if there is a downgrader from $r.Dwn$ along it. 
-
-Security enforcement via program analysis computes a fixpoint solution for the dataflow behavior of the program, where the fixpoint system is seeded by the dataflow facts arising at the source statements. These are propagated through the code.
-
-A common way of handling downgraders is to terminate the flow at their return point. This creats a challenge however, as the status of a method as a downgrader depends on the given source and sink, but the sink is not yet known at the point where the judgment whether to terminate the flow is made. Unfortunately, the simple solution of treating downgraders as globally applicable is unsound, which mandates a more expensive solution.
-
-Indeed, an acceptable solution is to compute the fixpoint solution on a per-rule basis. Different rules are processed separately, such that flow termination at downgrading points is conservative. 
-
-In this setting, two optimizations are made possible:
-\begin{enumerate}
-	\item If two rules, $r_1$ and $r_2$, agree on the set of downgraders, then they can be processed simultaneously without loss of soundness.
-	\item As further optimization, even if the declared sets of downgraders for $r_1$ and $r_2$ differ, the downgraders actually used by the program, denoted $Dwn_p$, may be common to both $r_1$ and $r_2$: $Dwn_p \subseteq Dwn_{r_1} \cap Dwn_{r_2}$. In this case, too, $r_1$ and $r_2$ can be processed at the same time.
-\end{enumerate}
-
-Different techniques have been proposed to perform program security analysis. These feature different precision/performance tradeoffs. We discuss a few of these techniques, at a high level, in the following.
-
-\subsection{Taint Analysis}
-
-Perhaps the most popular method to track flow of information throughout the program via program analysis is \emph{taint analysis}. The idea, stated simply, is to assign a \emph{taint tag} to every value resulting from a source statement, where the tag is merely a bit indicating that the value is security relevant. The taint tags are then propagated along the program's control-flow paths.
-
-A main reason for the wide adoption of taint analysis as a framework for program-analysis-based information-flow security is its simplicity and scalability. Practical security products are required to scale to industry-level programs, which may consist of miillions of lines of code, and so an analysis that tracks minimal information is favorable.
-
-At the same time, the limited expressiveness of taint analysis brings about accuracy challenges. 
-
-\subsection{String Analysis}
-
-\subsection{Staged Analysis}
 
