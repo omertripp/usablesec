@@ -1,0 +1,22 @@
+An alternative approach to annotating the program with security types is to track flow of information throughout the code via program analysis. In this scheme, there are three categories of statements that are distinguished from the rest, as mentioned briefly above:
+\begin{itemize}
+	\item \emph{Source} statements are statements that read either untrusted data (integrity) or sensitive data (confidentiality).
+	\item \emph{Sink} statements either perform a security-sensitive operation (integrity), or release information to untrusted observers (confidentiality).
+	\item Finally, \emph{downgrader} statements either sanitize/validate untrusted data (integrity), or anonymize/declassify sensitive data (confidentiality).
+\end{itemize}
+
+These three categories of statements are organized into security rules of the form $\left( Src,Dwn,Snk \right)$. $Src$, $Dwn$ and $Snk$ denote subsets of the source, sink and downgrader statements in the program, repsectively. Rules restrict the relevant security threats. Flow of information between source $src$ and sink $snk$ constitutes a security threat only if there is a rule $r$, such that $src \in r.Src$ and $snk \in r.Snk$. By the same token, the flow is benign only if there is a downgrader from $r.Dwn$ along it. 
+
+Security enforcement via program analysis computes a fixpoint solution for the dataflow behavior of the program, where the fixpoint system is seeded by the dataflow facts arising at the source statements. These are propagated through the code.
+
+A common way of handling downgraders is to terminate the flow at their return point. This creats a challenge however, as the status of a method as a downgrader depends on the given source and sink, but the sink is not yet known at the point where the judgment whether to terminate the flow is made. Unfortunately, the simple solution of treating downgraders as globally applicable is unsound, which mandates a more expensive solution.
+
+Indeed, an acceptable solution is to compute the fixpoint solution on a per-rule basis. Different rules are processed separately, such that flow termination at downgrading points is conservative. 
+
+In this setting, two optimizations are made possible:
+\begin{enumerate}
+	\item If two rules, $r_1$ and $r_2$, agree on the set of downgraders, then they can be processed simultaneously without loss of soundness.
+	\item As further optimization, even if the declared sets of downgraders for $r_1$ and $r_2$ differ, the downgraders actually used by the program, denoted $Dwn_p$, may be common to both $r_1$ and $r_2$: $Dwn_p \subseteq Dwn_{r_1} \cap Dwn_{r_2}$. In this case, too, $r_1$ and $r_2$ can be processed at the same time.
+\end{enumerate}
+
+Different techniques have been proposed to perform program security analysis. These feature different precision/performance tradeoffs. We discuss a few of these techniques, at a high level, in the following.
