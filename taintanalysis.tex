@@ -1,0 +1,7 @@
+\section{Taint Analysis}
+
+Perhaps the most popular method to track flow of information throughout the program via program analysis is \emph{taint analysis}. The idea, stated simply, is to assign a \emph{taint tag} to every value resulting from a source statement, where the tag is merely a bit indicating that the value is security relevant. The taint tags are then propagated along the program's control-flow paths.
+
+A main reason for the wide adoption of taint analysis as a framework for program-analysis-based information-flow security is its simplicity and scalability. Practical security products are required to scale to industry-level programs, which may consist of miillions of lines of code, and so an analysis that tracks minimal information is favorable.
+
+At the same time, the limited expressiveness of taint analysis brings about accuracy challenges. 

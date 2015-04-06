@@ -1,0 +1,46 @@
+\section{The Principle of Noninterference}
+
+An elegant way of formalizing the requirement that the source data does not affect the sink's behavior is via the principle of noninterference. This principle --- first proposed by Goguen and Meseguer in 1982 \cite{GoguenMeseguer} --- formalizes the intuition that variation ``sensitive'' values should not cause variation of ``nonsensitive'' values.
+
+Noninterference assumes an abstract model of the program as an input/output machine. Inputs and outputs are classified as either \emph{high} or \emph{low}.
+%
+In confidentiality, low is interpreted as low sensitivity. A low value is thus a value that is considered unclassified. Complementarily, a high value is considered classified (or sensitive). Integrity assigns the dual meaning to high and low. 
+In integrity, low means trusted, whereas high means untrusted. Thanks to these dual interpretations, both integrity and confidentiality reduce to the requirement that there be no flow of high input values to the low part of the output.
+%
+These dual interpretations of high and low are summarized in Table \ref{Ta:highlow}.
+
+\begin{table}
+	\begin{center}
+		\begin{tabular}{|c|c|c|}
+			\hline
+			& {\bf Integrity} & {\bf Confidentiality} \\ \hline
+			{\bf High}	& Untrusted & Secret \\ \hline
+			{\bf Low} & Trusted & Public \\ 		
+			\hline
+		\end{tabular}
+	\end{center}
+	\caption{\label{Ta:highlow}The meaning of high and low values with the addition of downgrading}
+\end{table} 
+
+With this background, we can give an informal statement of the property of noninterference. The property holds if and only if the restriction of the output to low values is the same for any pair of inputs that agree on the low values. That is, modifying the high values does not lead to any observable change in the system's output. In this sense, there is no interference between high and low values.
+
+Formal statement of the noninterference principle requires some notation. Denote by $M$ a memory configuration, and let $M_L$ and $M_H$ denote the projection of $M$ to its low and high parts, respectively. We specialize the equality relation analogously: $M \equiv_{L} M'$ means equality over the low values between memory configurations $M$ and $M'$, and similarly, $M \equiv_{H} M'$ means equality over the high parts. Finally, let $P$ be the program, which we assume for simplicity to be deterministic, and $(P,M) \longrightarrow^{*} M'$ a complete execution of $P$ starting at memory configuration $M$ and terminating at configuration $M'$.
+
+The definition of noninterference is then as follows:
+$$
+\begin{array}{rrrcl}
+\forall M_1,M_2. &  				  & M_1 & \equiv_L & M_2 \\
+&  \wedge & (P,M_1) & \longrightarrow^{*} & M_1' \\ 
+&  \wedge & (P,M_2) & \longrightarrow^{*} & M_2' \\
+& \Longrightarrow & M_1'    & \equiv_L & M_2'  \\
+\end{array}
+$$
+That is, if the initial memory configurations agree on their respective low parts, then the same should hold true of the final memory configurations. A visual representation of this requirements is provided in Figure \ref{noninterfere}. 
+
+\begin{figure}
+	TODO!!!
+	\caption{Visual representation of the noninterference principle}
+\end{figure}
+
+Let us now revisit the example in Figure \ref{Fi:chIFS:example}. First, for the integrity vulnerability extending between {\tt getParameter} and {\tt renderToHTML}, we observe that 
+the user-provided data --- belonging in the high part of the input configuration --- flows into a security-sensitive operation, and so the low part of the output configuration. Analogously, the confidential --- and thus high --- data read via the {\tt readPassword} call is released to public observers of the log, thus flowing into the low part of the output configuration.

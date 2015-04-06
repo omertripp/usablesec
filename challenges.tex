@@ -1,0 +1,75 @@
+\section{Challenges and Limitations}
+
+While noninterference is an elegant criterion that accounts simultaneously for both integrity and confidentiality threats, it suffers from several limitations and poses some nontrivial implementation challenges. We discuss these in turn.
+
+\subsubsection{Strictness}
+
+A straightforward fix for the defects exhibited by the code in Figure \ref{Fi:chIFS:example} is to downgrade the high value: Sanitize or validate it to prevent integrity attacks, or declassify it to prevent release of sensitive information. Notice, however, that the noninterference property --- in its current form --- is too strict to accomodate the notion of downgrading.
+
+Indeed, in the practical setting of production sofrware, 
+whose behavior is often guided by user input and whose output often reflects data originating from multiple users, it is extremely challenging to enforce full separation between high and low values. Doing so often comes at the cost of critical functionality.
+
+As a natural example, an e-commerce site accepts login credentials from the user, which it utilizes to access the user's account, stored on a backend database, via security-sensitive calls that could potentiall lead to an SQL injection attack. For confidentiality, public data presented to the user, such as purchase recommendations, may be influenced by sensitive data such as the user's profile.
+
+In response, a relaxed notion of noninterference has been proposed by XYZ, which augments the basic setting with the ability to transform high values into low values via downgrading. This enhancement permits the programmer to handle security-sensitive values as they propagate through the code. With this enhancement, we arrive from Table \ref{Ta:highlow} to Table \ref{Ta:highlowExtended}.
+
+\begin{table}
+	\begin{center}
+		\begin{tabular}{|c|c|c|}
+			\hline
+			& {\bf Integrity} & {\bf Confidentiality} \\ \hline
+			{\bf High}	& Untrusted & Secret \\ \hline
+			{\bf Low} & Trusted & Public \\ \hline		
+			{\bf Downgrading} & Endorsement & Declassification \\
+			\hline
+		\end{tabular}
+	\end{center}
+	\caption{\label{Ta:highlowExtended}The meaning of high and low values with the addition of downgrading}
+\end{table} 
+
+\subsubsection{Correctness of Downgrading}
+
+The introduction of downgraders as a means to accommodate information flows that transition from high to low is necessary for practical adoption of the noninterference criterion. At the same time, however, it introduces a new challenge: How do we ascertain that the downgrading operation operates correctly?
+
+If the downgrader is incorrect, or partial, then an attacker may still be able to exploit the system. We provide an example in Figure \ref{TateExample}. This code, taken from ...
+
+
+
+\subsubsection{Covert Channels}
+
+So far we have implicitly considered only direct flow of information. However, security threats occupy a broader scope. In particular, an attack could become possible via indirect mechanisms, such as exploiting time or heat measurements.
+
+In general, we refer to mechanisms for information transfer as \emph{channels}. A \emph{channel} is a means, or mechanism, to signal information through a compute device. 
+\emph{Covert channels}, or \emph{side channels}, are channels that exploit a mechanism whose primary purpose is not information transfer.
+
+Covert channels divide into several categories, which we survey in turn.
+
+\paragraph{Implicit flows.} The control-flow behavior of a program is a means to signal information. Branching decisions governed by high values may impact low variables, which creates a covert channel.
+
+\begin{figure}
+	\begin{lstlisting}
+	t = h % 2;
+	l = 0;
+	if (t == 1) 
+	l = 1;
+	\end{lstlisting}
+	\caption{\label{Fi:implicitFlow}Example of an implicit flow}
+\end{figure}
+
+To illustrate this, we refer to the code in Figure \ref{Fi:implicitFlow}. In this program, we assume that {\tt l} and {\tt h} are low and high variables, respectively. Though there is no explicit assignment of the high value pointed-to by {\tt h} to {\tt l}, this program is equivalent to the program
+\begin{quote}
+	{\tt l = h \% 2}
+\end{quote} 
+where there is direct flow from high to low.
+
+\paragraph{Termination.} Another channel, similar to implicit flows, is termination. Whether or not a program terminates is a potential channel for release of sensitive information. *** Example ***
+
+\paragraph{Timing.} Monitoring the execution time of a program discloses information about the values it operates on. In a seminal paper \cite{XXX},
+
+\paragraph{Probabilistic.} Under the assumption that the attacker is able to execute the program multiple times, sensitive information is potentially leaked through stochastic program properties by changing the distribution of observable data. 
+
+\paragraph{Resource exhaustion.} Another channel is exhaustion of finite compute resources, such as memory or disk space. 
+
+\paragraph{Power.} Similarly to time measurement, the power consumed by the compute device throughout the program's execution is a potential hint as to which values are being processed.
+
+\paragraph{Sensors.} Correlations between sensors can disclose to an attacker unintended information. A recent example is use of the gyroscope built into modern smartphones to recover the speaker's identity, and even parse speech.
